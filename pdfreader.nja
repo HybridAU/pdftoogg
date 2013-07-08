@@ -1,0 +1,6 @@
+{
+  "venv": "", 
+  "name": "pdfReader", 
+  "license": "GNU General Public License v3", 
+  "description": "A program that converts PDF documetns into oggs"
+}
