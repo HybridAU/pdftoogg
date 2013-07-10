@@ -6,7 +6,9 @@
 #
 #
 import optparse
-import pyPdf
+import subprocess
+import os
+import sys
 
 supportedLanguages = ['en-US', 'en-GB', 'de-DE', 'es-ES', 'fr-FR', 'it-IT']
 
@@ -19,16 +21,22 @@ def validate_options(options, args):
     if len(args) > 0:
         parser.error("Too many arguments.")
 
+    if not os.path.exists(options.inFile):
+        sys.stderr.write("Could not open the specified PDF file.\n")
+        sys.exit(1)
+
     if options.language not in supportedLanguages:
-        print(("Language " + options.language + " is currently not available.\n"
-        "Available languages are " + ", ".join(supportedLanguages[:-1]) +
-        " and " + supportedLanguages[-1] + ".\n"))
+        sys.stderr.write(("Language " + options.language +
+        " is currently not available.\n Available languages are "
+        + ", ".join(supportedLanguages[:-1]) + " and " + supportedLanguages[-1]
+        + ".\n"))
+        sys.exit(1)
 
 
 def read_pdf_file(fileLocation):
     #It's assume that the fileLocation is valid because its allready been tested
     #in validate_options. Otherwise we would check that first.
-    inFile = pyPdf.PdfFileReader(file(fileLocation, "rb"))
+    return(subprocess.call(['pdftotext', fileLocation, '-']))
 
 
 if __name__ == '__main__':
@@ -59,3 +67,6 @@ if __name__ == '__main__':
 
     (options, args) = parser.parse_args()
     validate_options(options, args)
+
+    test = read_pdf_file(options.inFile)
+    print("Test is " + str(len(test)))
