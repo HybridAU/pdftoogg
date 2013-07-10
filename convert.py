@@ -5,9 +5,11 @@
 # Michael Van Delft 2013-07-08
 #
 #
-
 import optparse
+import pyPdf
+
 supportedLanguages = ['en-US', 'en-GB', 'de-DE', 'es-ES', 'fr-FR', 'it-IT']
+
 
 def validate_options(options, args):
     """
@@ -18,12 +20,15 @@ def validate_options(options, args):
         parser.error("Too many arguments.")
 
     if options.language not in supportedLanguages:
-        print "Language" + options.language + "is currently not available.\n\
-        'Available languages are ' + ', '.join(languages[:-1]) + \
-        ' and ' + languages[-1] + '.\n'""
+        print(("Language " + options.language + " is currently not available.\n"
+        "Available languages are " + ", ".join(supportedLanguages[:-1]) +
+        " and " + supportedLanguages[-1] + ".\n"))
 
 
-
+def read_pdf_file(fileLocation):
+    #It's assume that the fileLocation is valid because its allready been tested
+    #in validate_options. Otherwise we would check that first.
+    inFile = pyPdf.PdfFileReader(file(fileLocation, "rb"))
 
 
 if __name__ == '__main__':
@@ -39,9 +44,9 @@ if __name__ == '__main__':
                       help="Output to the specified file: (ogg format)")
     parser.add_option("-l", "--language", dest="language",
                       default="en-US",
-                      help="Language to speak: (default is en-US) avalible \
-                      languages inclue 'en-US', 'en-GB', 'de-DE', 'es-ES', \
-                      'fr-FR', 'it-IT'")
+                      help="Language to speak: (default is en-US) avalible"
+                      "languages inclue 'en-US', 'en-GB', 'de-DE', 'es-ES',"
+                      "'fr-FR', 'it-IT'")
     parser.add_option("-v", "--volume", dest="volume",
                       default=1.0, type="float",
                       help="Output volume: (default is 1.0)")
@@ -54,5 +59,3 @@ if __name__ == '__main__':
 
     (options, args) = parser.parse_args()
     validate_options(options, args)
-
-    print(options.volume)
