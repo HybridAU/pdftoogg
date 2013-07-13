@@ -41,14 +41,23 @@ def read_pdf_file(fileLocation):
     #Assumes that the fileLocation is valid because its allready been tested
     #in validate_option
 
-    #Check that we can write to .pdfTemp
+    #Check if .pdfTemp allready exists
     if os.path.exists('.pdfTemp'):
-        overwrite = eval(input(".pdfTemp allready exists, overwrite? [y/N]"))
-        if overwrite.lowwer() not in ["y", "yes"]:
+        overwrite = raw_input(".pdfTemp allready exists, overwrite? [y/N]")
+        if overwrite.lower() not in ["y", "yes"]:
             sys.exit(0)
 
+    #Convert the PDF outputing to .pdfTemp
+    subprocess.call(['pdftotext', fileLocation, '.pdfTemp'])
 
-    return(subprocess.call(['pdftotext', fileLocation, '.pdfTemp']))
+    #Read back in from .pdfTemp
+    with open(".pdfTemp", "r") as textFile:
+        data = textFile.read().replace('\n', '')
+
+    #Clean up after ourselfs
+    os.remove(".pdfTemp")
+
+    return(data)
 
 
 if __name__ == '__main__':
@@ -80,5 +89,5 @@ if __name__ == '__main__':
     (options, args) = parser.parse_args()
     validate_options(options, args)
 
-    test = read_pdf_file(options.inFile)
-    print("Test is " + str(len(test)))
+    text = read_pdf_file(options.inFile)
+    print(text)
