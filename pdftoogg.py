@@ -38,7 +38,7 @@ def check_file_exists(location):
 
 def setup_options():
     """Setst up options that that can be set"""
-    usage = "usage: %prog [options]"
+    usage = "usage: %prog [input file] [options]"
     parser = optparse.OptionParser(usage)
 
     parser.add_option("-i", "--input", dest="inFile",
@@ -68,9 +68,19 @@ def validate_options(options, args):
     """
     Given a set of command line options, performs various validation checks
     """
-    if len(args) > 0:
+    if len(args) > 1:
         sys.stderr.write("Too many arguments.\n")
         sys.exit(1)
+
+    if len(args) == 1:
+        # supporting either -i or args[0] for input file, but not both
+        if options.inFile is None:
+            options.inFile = args[0]
+        elif options.inFile == args[0]:
+            pass
+        else:
+            sys.stderr.write("Conflicting values for input: " + args[0] +
+                             " and " + options.wordfile)
 
     if options.inFile is None:
         sys.stderr.write("No input file specified. Try using -i <file name>\n")
