@@ -1,9 +1,17 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # A short Python script that converts a pdf into an ogg file.
 # Ideas and bits of code shamelessly ripped from http://picospeaker.tk/ and
 # https://github.com/redacted/XKCD-password-generator then cobbled togeather by
-# Michael Van Delft 2013-07-08
+# Michael Van Delft 2013-07-13
+#
+# Requires pdftotext (Should be on most linux systems) and pico2wave can be
+# found by installing libttspico0, libttspico-data and libttspico-utils.
+#
+# This is free and unencumbered software released into the public domain.
+# see http://unlicense.org
+#
 
 import optparse
 import subprocess
@@ -37,7 +45,8 @@ def setup_options():
                       default=None,
                       help="The PDF file to be converted:")
     parser.add_option("-o", "--output", dest="outFile",
-                      default="./pdfReader.ogg",
+                      default=None,  # The default for this is the name of the
+                      #input file but this is set in validate_options.
                       help="Output to the specified file: (ogg format)")
     parser.add_option("-l", "--language", dest="language",
                       default="en-US",
@@ -64,8 +73,7 @@ def validate_options(options, args):
         sys.exit(1)
 
     if options.inFile is None:
-        sys.stderr.write("No input file specified .\n"
-                         "Try -i <file name>\n")
+        sys.stderr.write("No input file specified. Try using -i <file name>\n")
         sys.exit(1)
 
     if not os.path.exists(options.inFile):
@@ -88,6 +96,8 @@ def validate_options(options, args):
         sys.stderr.write("Pitch must be between -20 and 20. (default is 0)\n")
         sys.exit(1)
 
+    if options.outFile is None:
+        options.outFile = str(options.inFile) + ".ogg"
     #Moved to last because it requires user input and it's a pain to press 'Y'
     #only to find out one of the other options is wrong.
     check_file_exists(options.outFile)
