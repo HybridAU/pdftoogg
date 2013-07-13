@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 # A short Python script that converts a pdf into an ogg file.
-# Ideas and code shamelessly ripped from http://picospeaker.tk/ and
+# Ideas and bits of code shamelessly ripped from http://picospeaker.tk/ and
 # https://github.com/redacted/XKCD-password-generator then cobbled togeather by
 # Michael Van Delft 2013-07-08
 
@@ -19,12 +19,11 @@ except NameError:
     pass
 
 
-def check_file_exists(fileLocation):
+def check_file_exists(location):
     """Checks a location and if there is allready a file asks if it should
     be overwiten, if no exits the program"""
-    if os.path.exists(fileLocation):
-        overwrite = eval(input(str(fileLocation)) +
-                             " allready exists, overwrite? [y/N]")
+    if os.path.exists(location):
+        overwrite = input(str(location) + " allready exists, overwrite? [y/N]")
         if overwrite.lower() not in ["y", "yes"]:
             sys.exit(0)
 
@@ -42,16 +41,16 @@ def setup_options():
                       help="Output to the specified file: (ogg format)")
     parser.add_option("-l", "--language", dest="language",
                       default="en-US",
-                      help="Language to speak: (default is en-US) avalible"
-                      "languages inclue 'en-US', 'en-GB', 'de-DE', 'es-ES',"
-                      "'fr-FR', 'it-IT'")
+                      help="Language to speak: (default is en-US) Avalible"
+                      "languages are " + ", ".join(supportedLanguages[:-1]) +
+                      " and " + supportedLanguages[-1])
     parser.add_option("-r", "--rate", dest="rate",
                       default=100, type="int",
                       help="Rate of speech from 10 to 300: (default is 100) "
                       "50 is half speed, 200 is double speed")
     parser.add_option("-p", "--pitch", dest="pitch",
                       default=0, type="int",
-                      help="Voice pitch from -79 to 39: (default is 0)")
+                      help="Voice pitch from -20 to 20: (default is 0)")
 
     return(parser.parse_args())
 
@@ -73,14 +72,25 @@ def validate_options(options, args):
         sys.stderr.write("Could not open the specified PDF file.\n")
         sys.exit(1)
 
-    check_file_exists(options.outFile)
-
     if options.language not in supportedLanguages:
         sys.stderr.write(("Language " + options.language +
         " is currently not available.\n Available languages are "
         + ", ".join(supportedLanguages[:-1]) + " and " + supportedLanguages[-1]
         + ".\n"))
         sys.exit(1)
+
+    #Check if the rate is between 10 and 300
+    if not 10 <= options.rate <= 300:
+        sys.stderr.write("Rate must be between 10 and 300. (default is 100)\n")
+        sys.exit(1)
+
+    if not -20 <= options.pitch <= 20:
+        sys.stderr.write("Pitch must be between -20 and 20. (default is 0)\n")
+        sys.exit(1)
+
+    #Moved to last because it requires user input and it's a pain to press 'Y'
+    #only to find out one of the other options is wrong.
+    check_file_exists(options.outFile)
 
 
 def read_pdf_file(fileLocation):
