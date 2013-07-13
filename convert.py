@@ -97,7 +97,7 @@ def wave_to_ogg(waveFile, outputLocation, pitch, rate):
                      ])
 
     #Clean up the temp wave file
-    #os.remove(waveFile)
+    os.remove(waveFile)
 
     return None
 
@@ -119,7 +119,7 @@ if __name__ == "__main__":
                       "languages inclue 'en-US', 'en-GB', 'de-DE', 'es-ES',"
                       "'fr-FR', 'it-IT'")
     parser.add_option("-r", "--rate", dest="rate",
-                      default=0, type="int",
+                      default=100, type="int",
                       help="Rate of speech from 10 to 300: (default is 100) "
                       "50 is half speed, 200 is double speed")
     parser.add_option("-p", "--pitch", dest="pitch",
@@ -131,5 +131,4 @@ if __name__ == "__main__":
 
     text = read_pdf_file(options.inFile)
     waveFile = text_to_wave(options.language, text)
-    wave_to_ogg(".pdfTemp.wav",  # waveFile,
-               options.outFile, options.pitch)
+    wave_to_ogg(waveFile, options.outFile, options.pitch, options.rate)
