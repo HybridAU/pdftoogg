@@ -12,18 +12,68 @@ import sys
 
 supportedLanguages = ["en-US", "en-GB", "de-DE", "es-ES", "fr-FR", "it-IT"]
 
+#Compatiblity with python 2 and 3
+try:
+    input = raw_input
+except NameError:
+    pass
+
+
+def check_file_exists(fileLocation):
+    """Checks a location and if there is allready a file asks if it should
+    be overwiten, if no exits the program"""
+    if os.path.exists(fileLocation):
+        overwrite = eval(input(str(fileLocation)) +
+                             " allready exists, overwrite? [y/N]")
+        if overwrite.lower() not in ["y", "yes"]:
+            sys.exit(0)
+
+
+def setup_options():
+    """Setst up options that that can be set"""
+    usage = "usage: %prog [options]"
+    parser = optparse.OptionParser(usage)
+
+    parser.add_option("-i", "--input", dest="inFile",
+                      default=None,
+                      help="The PDF file to be converted:")
+    parser.add_option("-o", "--output", dest="outFile",
+                      default="./pdfReader.ogg",
+                      help="Output to the specified file: (ogg format)")
+    parser.add_option("-l", "--language", dest="language",
+                      default="en-US",
+                      help="Language to speak: (default is en-US) avalible"
+                      "languages inclue 'en-US', 'en-GB', 'de-DE', 'es-ES',"
+                      "'fr-FR', 'it-IT'")
+    parser.add_option("-r", "--rate", dest="rate",
+                      default=100, type="int",
+                      help="Rate of speech from 10 to 300: (default is 100) "
+                      "50 is half speed, 200 is double speed")
+    parser.add_option("-p", "--pitch", dest="pitch",
+                      default=0, type="int",
+                      help="Voice pitch from -79 to 39: (default is 0)")
+
+    return(parser.parse_args())
+
 
 def validate_options(options, args):
     """
     Given a set of command line options, performs various validation checks
     """
-
     if len(args) > 0:
-        parser.error("Too many arguments.")
+        sys.stderr.write("Too many arguments.\n")
+        sys.exit(1)
+
+    if options.inFile is None:
+        sys.stderr.write("No input file specified .\n"
+                         "Try -i <file name>\n")
+        sys.exit(1)
 
     if not os.path.exists(options.inFile):
         sys.stderr.write("Could not open the specified PDF file.\n")
         sys.exit(1)
+
+    check_file_exists(options.outFile)
 
     if options.language not in supportedLanguages:
         sys.stderr.write(("Language " + options.language +
@@ -31,16 +81,6 @@ def validate_options(options, args):
         + ", ".join(supportedLanguages[:-1]) + " and " + supportedLanguages[-1]
         + ".\n"))
         sys.exit(1)
-
-
-def check_temp_file(fileLocation):
-    """Checks a location and if there is allready a file asks if it should
-    be overwiten, if no exits the program"""
-    if os.path.exists(fileLocation):
-        overwrite = raw_input(str(fileLocation) +
-                             " allready exists, overwrite? [y/N]")
-        if overwrite.lower() not in ["y", "yes"]:
-            sys.exit(0)
 
 
 def read_pdf_file(fileLocation):
@@ -53,7 +93,7 @@ def read_pdf_file(fileLocation):
     tempLocation = ".pdfTemp.txt"
 
     #Check if file allready exists
-    check_temp_file(tempLocation)
+    check_file_exists(tempLocation)
 
     #Convert the PDF outputing to .pdfTemp
     subprocess.call(["pdftotext", fileLocation, tempLocation])
@@ -73,7 +113,7 @@ def text_to_wave(language, text):
     tempLocation = ".pdfTemp.wav"
 
     #Check if file allready exists
-    check_temp_file(tempLocation)
+    check_file_exists(tempLocation)
 
     #Convert the text to  a wave
     subprocess.call(["pico2wave",
@@ -101,34 +141,9 @@ def wave_to_ogg(waveFile, outputLocation, pitch, rate):
 
     return None
 
-
 if __name__ == "__main__":
-
-    usage = "usage: %prog [options]"
-    parser = optparse.OptionParser(usage)
-
-    parser.add_option("-i", "--input", dest="inFile",
-                      default="./test.pdf",
-                      help="The PDF file to be converted:")
-    parser.add_option("-o", "--output", dest="outFile",
-                      default="./pdfReader.ogg",
-                      help="Output to the specified file: (ogg format)")
-    parser.add_option("-l", "--language", dest="language",
-                      default="en-US",
-                      help="Language to speak: (default is en-US) avalible"
-                      "languages inclue 'en-US', 'en-GB', 'de-DE', 'es-ES',"
-                      "'fr-FR', 'it-IT'")
-    parser.add_option("-r", "--rate", dest="rate",
-                      default=100, type="int",
-                      help="Rate of speech from 10 to 300: (default is 100) "
-                      "50 is half speed, 200 is double speed")
-    parser.add_option("-p", "--pitch", dest="pitch",
-                      default=0, type="int",
-                      help="Voice pitch from -79 to 39: (default is 0)")
-
-    (options, args) = parser.parse_args()
+    (options, args) = setup_options()
     validate_options(options, args)
-
     text = read_pdf_file(options.inFile)
     waveFile = text_to_wave(options.language, text)
     wave_to_ogg(waveFile, options.outFile, options.pitch, options.rate)
