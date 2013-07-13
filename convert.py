@@ -1,16 +1,16 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-# Ideas and code ripped shamelessly from http://picospeaker.tk/ and
+# A short Python script that converts a pdf into an ogg file.
+# Ideas and code shamelessly ripped from http://picospeaker.tk/ and
 # https://github.com/redacted/XKCD-password-generator then cobbled togeather by
 # Michael Van Delft 2013-07-08
-#
-#
+
 import optparse
 import subprocess
 import os
 import sys
 
-supportedLanguages = ['en-US', 'en-GB', 'de-DE', 'es-ES', 'fr-FR', 'it-IT']
+supportedLanguages = ["en-US", "en-GB", "de-DE", "es-ES", "fr-FR", "it-IT"]
 
 
 def validate_options(options, args):
@@ -33,6 +33,16 @@ def validate_options(options, args):
         sys.exit(1)
 
 
+def check_temp_file(fileLocation):
+    """Checks a location and if there is allready a file asks if it should
+    be overwiten, if no exits the program"""
+    if os.path.exists(fileLocation):
+        overwrite = raw_input(str(fileLocation) +
+                             " allready exists, overwrite? [y/N]")
+        if overwrite.lower() not in ["y", "yes"]:
+            sys.exit(0)
+
+
 def read_pdf_file(fileLocation):
     """
     Takes the location of a pdf file and uses pdftotext to the text as a big
@@ -40,27 +50,46 @@ def read_pdf_file(fileLocation):
     """
     #Assumes that the fileLocation is valid because its allready been tested
     #in validate_option
+    tempLocation = ".pdfTemp.txt"
 
-    #Check if .pdfTemp allready exists
-    if os.path.exists('.pdfTemp'):
-        overwrite = raw_input(".pdfTemp allready exists, overwrite? [y/N]")
-        if overwrite.lower() not in ["y", "yes"]:
-            sys.exit(0)
+    #Check if file allready exists
+    check_temp_file(tempLocation)
 
     #Convert the PDF outputing to .pdfTemp
-    subprocess.call(['pdftotext', fileLocation, '.pdfTemp'])
+    subprocess.call(["pdftotext", fileLocation, tempLocation])
 
-    #Read back in from .pdfTemp
-    with open(".pdfTemp", "r") as textFile:
-        data = textFile.read().replace('\n', '')
+    #Read back in from .pdfTemp as a single string
+    with open(tempLocation, "r") as textFile:
+        data = textFile.read().replace("\n", "")
 
     #Clean up after ourselfs
-    os.remove(".pdfTemp")
+    os.remove(tempLocation)
 
     return(data)
 
 
-if __name__ == '__main__':
+def text_to_wave(language, text):
+    """Converts Text to Speach using Pico2wave"""
+    tempLocation = ".pdfTemp.wav"
+
+    #Check if file allready exists
+    check_temp_file(tempLocation)
+
+    #Convert the text to  a wave
+    subprocess.call(["pico2wave",
+                     "-w", tempLocation,
+                     "-l", language,
+                     "--", text])
+    #Return the file loaction (It will be cleaned up after it's been compressed.
+    return(tempLocation)
+
+
+def wave_to_ogg(waveFile):
+    """Converts a wave file to an ogg"""
+    return None
+
+
+if __name__ == "__main__":
 
     usage = "usage: %prog [options]"
     parser = optparse.OptionParser(usage)
@@ -90,4 +119,5 @@ if __name__ == '__main__':
     validate_options(options, args)
 
     text = read_pdf_file(options.inFile)
-    print(text)
+    waveFile = text_to_wave(options.language, text)
+    wave_to_ogg(waveFile)
