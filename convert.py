@@ -84,8 +84,21 @@ def text_to_wave(language, text):
     return(tempLocation)
 
 
-def wave_to_ogg(waveFile):
+def wave_to_ogg(waveFile, outputLocation, pitch, rate):
     """Converts a wave file to an ogg"""
+    #Assume the output location has been validated by validate_options.
+
+    subprocess.call(["sox",
+                     waveFile,
+                     "-t", "ogg",
+                     outputLocation,
+                     "pitch", str(float(pitch) * 100),
+                     "tempo", "-s", str(float(rate) / 100)
+                     ])
+
+    #Clean up the temp wave file
+    #os.remove(waveFile)
+
     return None
 
 
@@ -98,19 +111,17 @@ if __name__ == "__main__":
                       default="./test.pdf",
                       help="The PDF file to be converted:")
     parser.add_option("-o", "--output", dest="outFile",
-                      default="./test.ogg",
+                      default="./pdfReader.ogg",
                       help="Output to the specified file: (ogg format)")
     parser.add_option("-l", "--language", dest="language",
                       default="en-US",
                       help="Language to speak: (default is en-US) avalible"
                       "languages inclue 'en-US', 'en-GB', 'de-DE', 'es-ES',"
                       "'fr-FR', 'it-IT'")
-    parser.add_option("-v", "--volume", dest="volume",
-                      default=1.0, type="float",
-                      help="Output volume: (default is 1.0)")
     parser.add_option("-r", "--rate", dest="rate",
                       default=0, type="int",
-                      help="Rate of speech from -90 to 9900: (default is 0)")
+                      help="Rate of speech from 10 to 300: (default is 100) "
+                      "50 is half speed, 200 is double speed")
     parser.add_option("-p", "--pitch", dest="pitch",
                       default=0, type="int",
                       help="Voice pitch from -79 to 39: (default is 0)")
@@ -120,4 +131,5 @@ if __name__ == "__main__":
 
     text = read_pdf_file(options.inFile)
     waveFile = text_to_wave(options.language, text)
-    wave_to_ogg(waveFile)
+    wave_to_ogg(".pdfTemp.wav",  # waveFile,
+               options.outFile, options.pitch)
