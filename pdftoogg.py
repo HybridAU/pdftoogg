@@ -17,7 +17,6 @@ import optparse
 import subprocess
 import os
 import sys
-import string
 
 supportedLanguages = ["en-US", "en-GB", "de-DE", "es-ES", "fr-FR", "it-IT"]
 
@@ -136,17 +135,6 @@ def read_pdf_file(fileLocation):
     #Clean up after ourselfs
     os.remove(tempLocation)
 
-    #Remove control characters (they cause problems with pico2wave)
-    #mpa = dict.fromkeys(range(32))
-    #data = data.encode("ascii")
-    #print(''.join(c for c in str(data) if (ord(c) >= 32 or ord(c) <= 177)))
-    #input()
-
-    #all_bytes = string.maketrans('', '')  # String of 256 characters with (byte) value 0 to 255
-
-    #data = data.translate(all_bytes, all_bytes[:32])  # All bytes < 32 are deleted (the second argument lists the bytes to delete)
-    #data = "".join(filter(lambda x: ord(x)<128, data))
-    #print(str(data))
     return(data)
 
 
