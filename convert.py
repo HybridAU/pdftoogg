@@ -34,9 +34,21 @@ def validate_options(options, args):
 
 
 def read_pdf_file(fileLocation):
-    #It's assume that the fileLocation is valid because its allready been tested
-    #in validate_options. Otherwise we would check that first.
-    return(subprocess.call(['pdftotext', fileLocation, '-']))
+    """
+    Takes the location of a pdf file and uses pdftotext to the text as a big
+    string. This needs to be able to write to the current directory.
+    """
+    #Assumes that the fileLocation is valid because its allready been tested
+    #in validate_option
+
+    #Check that we can write to .pdfTemp
+    if os.path.exists('.pdfTemp'):
+        overwrite = eval(input(".pdfTemp allready exists, overwrite? [y/N]"))
+        if overwrite.lowwer() not in ["y", "yes"]:
+            sys.exit(0)
+
+
+    return(subprocess.call(['pdftotext', fileLocation, '.pdfTemp']))
 
 
 if __name__ == '__main__':
