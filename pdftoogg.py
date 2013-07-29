@@ -17,8 +17,13 @@ import optparse
 import subprocess
 import os
 import sys
+import math
+import string
 
 supportedLanguages = ["en-US", "en-GB", "de-DE", "es-ES", "fr-FR", "it-IT"]
+
+#If the pdf is more than 32766 characters long it needs to be split.
+numberOfWaveFiles = 1
 
 #Compatiblity with python 2 and 3
 try:
@@ -139,35 +144,47 @@ def read_pdf_file(fileLocation):
 
 
 def text_to_wave(language, text):
-    """Converts Text to Speach using Pico2wave"""
-    tempLocation = ".pdfTemp.wav"
+    """Converts Text to Speach using Pico2wave, Splits into multiple files if
+    the text is more than 32766 characters long"""
+    global numberOfWaveFiles
+    numberOfWaveFiles = int(math.ceil(len(text) / 32766))
 
-    #Check if file allready exists
-    check_file_exists(tempLocation)
+    tempLocation = ".pdfTemp"
+    for i in range(0, numberOfWaveFiles + 1):
+        #Check if file allready exists
+        check_file_exists(tempLocation + str(i) + ".wav")
 
-    #Convert the text to  a wave
-    subprocess.call(["pico2wave",
-                     "-w", tempLocation,
-                     "-l", language,
-                     "--", text])
-    #Return the file loaction (It will be cleaned up after it's been compressed.
+        start = int(i * 32766)
+        end = int((i + 1) * 32766)
+
+        #Convert the text to  a wave
+        subprocess.call(["pico2wave",
+                         "-w", tempLocation + str(i) + ".wav",
+                         "-l", language,
+                         "--", text[start:end]])
+
+    #Return the file loaction (To be cleaned up after it's been compressed)
     return(tempLocation)
 
 
 def wave_to_ogg(waveFile, outputLocation, pitch, rate):
     """Converts a wave file to an ogg"""
     #Assume the output location has been validated by validate_options.
+    convert = ["sox"]
 
-    subprocess.call(["sox",
-                     waveFile,
-                     "-t", "ogg",
+    for i in range(0, numberOfWaveFiles + 1):
+        convert.append(waveFile + str(i) + ".wav")
+
+    convert.extend(["-t", "ogg",
                      outputLocation,
                      "pitch", str(float(pitch) * 100),
-                     "tempo", "-s", str(float(rate) / 100)
-                     ])
+                     "tempo", "-s", str(float(rate) / 100)])
+
+    subprocess.call(convert)
 
     #Clean up the temp wave file
-    os.remove(waveFile)
+    for i in range(0, numberOfWaveFiles + 1):
+        os.remove(waveFile + str(i) + ".wav")
 
     return None
 
@@ -175,5 +192,5 @@ if __name__ == "__main__":
     (options, args) = setup_options()
     validate_options(options, args)
     text = read_pdf_file(options.inFile)
-    waveFile = text_to_wave(options.language, text)
-    wave_to_ogg(waveFile, options.outFile, options.pitch, options.rate)
+    waveFileLocation = text_to_wave(options.language, text)
+    wave_to_ogg(waveFileLocation, options.outFile, options.pitch, options.rate)
