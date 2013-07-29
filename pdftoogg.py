@@ -18,7 +18,7 @@ import subprocess
 import os
 import sys
 import math
-import string
+
 
 supportedLanguages = ["en-US", "en-GB", "de-DE", "es-ES", "fr-FR", "it-IT"]
 
@@ -113,19 +113,20 @@ def validate_options(options, args):
 
     if options.outFile is None:
         options.outFile = str(options.inFile) + ".ogg"
+
     #Moved to last because it requires user input and it's a pain to press 'Y'
     #only to find out one of the other options is wrong.
     check_file_exists(options.outFile)
 
 
-def read_pdf_file(fileLocation):
+def read_pdf_file(fileLocation, outLocation):
     """
     Takes the location of a pdf file and uses pdftotext to the text as a big
     string. This needs to be able to write to the current directory.
     """
     #Assumes that the fileLocation is valid because its allready been tested
     #in validate_option
-    tempLocation = ".pdfTemp.txt"
+    tempLocation = outLocation + ".txt"
 
     #Check if file allready exists
     check_file_exists(tempLocation)
@@ -143,28 +144,24 @@ def read_pdf_file(fileLocation):
     return(data)
 
 
-def text_to_wave(language, text):
+def text_to_wave(language, location, text):
     """Converts Text to Speach using Pico2wave, Splits into multiple files if
     the text is more than 32766 characters long"""
     global numberOfWaveFiles
     numberOfWaveFiles = int(math.ceil(len(text) / 32766))
 
-    tempLocation = ".pdfTemp"
     for i in range(0, numberOfWaveFiles + 1):
         #Check if file allready exists
-        check_file_exists(tempLocation + str(i) + ".wav")
+        check_file_exists(location + str(i) + ".wav")
 
         start = int(i * 32766)
         end = int((i + 1) * 32766)
 
         #Convert the text to  a wave
         subprocess.call(["pico2wave",
-                         "-w", tempLocation + str(i) + ".wav",
+                         "-w", location + str(i) + ".wav",
                          "-l", language,
                          "--", text[start:end]])
-
-    #Return the file loaction (To be cleaned up after it's been compressed)
-    return(tempLocation)
 
 
 def wave_to_ogg(waveFile, outputLocation, pitch, rate):
@@ -180,7 +177,9 @@ def wave_to_ogg(waveFile, outputLocation, pitch, rate):
                      "pitch", str(float(pitch) * 100),
                      "tempo", "-s", str(float(rate) / 100)])
 
-    subprocess.call(convert)
+    subprocess.call(convert)  # This producese and errror becasue the audio
+    #length that is recorded at the beginning of the file does not match the
+    #actual length. see http://sourceforge.net/p/sox/bugs/171/
 
     #Clean up the temp wave file
     for i in range(0, numberOfWaveFiles + 1):
@@ -191,6 +190,6 @@ def wave_to_ogg(waveFile, outputLocation, pitch, rate):
 if __name__ == "__main__":
     (options, args) = setup_options()
     validate_options(options, args)
-    text = read_pdf_file(options.inFile)
-    waveFileLocation = text_to_wave(options.language, text)
+    text = read_pdf_file(options.inFile, options.outFile)
+    waveFileLocation = text_to_wave(options.language, options.outFile, text)
     wave_to_ogg(waveFileLocation, options.outFile, options.pitch, options.rate)
