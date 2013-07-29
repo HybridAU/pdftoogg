@@ -9,6 +9,6 @@ To install rename the file to remove the extention.
 
 Ideas and bits of code shamelessly ripped from http://picospeaker.tk/ and https://github.com/redacted/XKCD-password-generator
 
-Requires pdftotext (Should be on most linux systems) and pico2wave which can be found by ```sudo apt-get install libttspico0 libttspico-data libttspico-utils```
+Requires pdftotext (Should be on most linux systems) pico2wave and sox which can be found by ```sudo apt-get install libttspico0 libttspico-data libttspico-utils sox```
 
 This is free and unencumbered software released into the public domain.
