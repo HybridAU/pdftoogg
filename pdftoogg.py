@@ -164,16 +164,16 @@ def text_to_wave(language, location, text):
                          "--", text[start:end]])
 
 
-def wave_to_ogg(waveFile, outputLocation, pitch, rate):
+def wave_to_ogg(location, pitch, rate):
     """Converts a wave file to an ogg"""
     #Assume the output location has been validated by validate_options.
     convert = ["sox"]
 
     for i in range(0, numberOfWaveFiles + 1):
-        convert.append(waveFile + str(i) + ".wav")
+        convert.append(location + str(i) + ".wav")
 
     convert.extend(["-t", "ogg",
-                     outputLocation,
+                     location,
                      "pitch", str(float(pitch) * 100),
                      "tempo", "-s", str(float(rate) / 100)])
 
@@ -183,7 +183,7 @@ def wave_to_ogg(waveFile, outputLocation, pitch, rate):
 
     #Clean up the temp wave file
     for i in range(0, numberOfWaveFiles + 1):
-        os.remove(waveFile + str(i) + ".wav")
+        os.remove(location + str(i) + ".wav")
 
     return None
 
@@ -191,5 +191,5 @@ if __name__ == "__main__":
     (options, args) = setup_options()
     validate_options(options, args)
     text = read_pdf_file(options.inFile, options.outFile)
-    waveFileLocation = text_to_wave(options.language, options.outFile, text)
-    wave_to_ogg(waveFileLocation, options.outFile, options.pitch, options.rate)
+    text_to_wave(options.language, options.outFile, text)
+    wave_to_ogg(options.outFile, options.pitch, options.rate)
